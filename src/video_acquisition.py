@@ -60,14 +60,8 @@ if __name__=="__main__":
                                          device_id=args.device_id)
 
     # check that all the arguments are passed rightly
-    if args.fps==0:
-        fps=5
-    elif args.fps==1:
-        fps=15
-    elif args.fps==2:
-        fps=30
-    else:
-        raise Exception("Invalid argument for fps parameter.")
+    args_fps_to_number={0:5, 1:15, 2:30}
+    fps=args_fps_to_number[args.fps]
 
     # create the output directory if needed
     if not os.path.exists(args.output_path):
