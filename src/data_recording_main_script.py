@@ -12,19 +12,26 @@ if __name__ == '__main__':
 
     cmd_for_kinect_audio = "python audio_recording.py --format %s --rate %i --num_channels %i " \
                            "--device_index %i --chunk_size %i --time %i " \
-                           "--output_path %s --output_filename %s"%(rec_config.AUDIO_KINECT_FORMAT,rec_config.AUDIO_KINECT_RATE,
+                           "--output_path %s --output_filename %s"%(rec_config.AUDIO_KINECT_FORMAT, rec_config.AUDIO_KINECT_RATE,
                                                                     rec_config.AUDIO_KINECT_NUM_CHANNELS, rec_config.AUDIO_KINECT_DEVICE_INDEX,
                                                                     rec_config.AUDIO_KINECT_CHUNK_SIZE, rec_config.AUDIO_KINECT_RECORDING_TIME,
                                                                     rec_config.AUDIO_KINECT_OUTPUT_PATH, rec_config.AUDIO_KINECT_OUTPUT_FILENAME)
 
     # add cmd for the external audio recorded (microphone)
-
+    cmd_for_external_audio = "python audio_recording.py --format %s --rate %i --num_channels %i " \
+                           "--device_index %i --chunk_size %i --time %i " \
+                           "--output_path %s --output_filename %s"%(rec_config.AUDIO_MICROPHONE_FORMAT, rec_config.AUDIO_MICROPHONE_RATE,
+                                                                    rec_config.AUDIO_MICROPHONE_NUM_CHANNELS, rec_config.AUDIO_MICROPHONE_DEVICE_INDEX,
+                                                                    rec_config.AUDIO_MICROPHONE_CHUNK_SIZE, rec_config.AUDIO_MICROPHONE_RECORDING_TIME,
+                                                                    rec_config.AUDIO_MICROPHONE_OUTPUT_PATH, rec_config.AUDIO_MICROPHONE_OUTPUT_FILENAME)
 
     # run recording processes in parallel
     processes = []
     p=subprocess.Popen(cmd_for_kinect, shell=True)
     processes.append(p)
     p=subprocess.Popen(cmd_for_kinect_audio, shell=True)
+    processes.append(p)
+    p = subprocess.Popen(cmd_for_external_audio, shell=True)
     processes.append(p)
     for process in processes:
         process.wait()
