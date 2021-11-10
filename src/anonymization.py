@@ -1,6 +1,6 @@
 import re
 
-def generate_pseudo_anonimization(name:str, surname:str, birth_date:str):
+def generate_pseudo_anonymization(name:str, surname:str, birth_date:str):
 
     birth_date=birth_date.strip()
     name=name.strip()

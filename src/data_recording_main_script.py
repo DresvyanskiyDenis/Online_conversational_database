@@ -3,7 +3,7 @@ import os
 import src.data_recording_config as rec_config
 import shutil
 
-from src.anonimization import generate_pseudo_anonimization
+from src.anonymization import generate_pseudo_anonymization
 
 if __name__ == '__main__':
     import argparse
@@ -64,7 +64,7 @@ if __name__ == '__main__':
         os.makedirs(os.path.join(args.output_path,session_full_name), exist_ok=True)
 
     # generate pseudoanonimized name
-    pseudo_name=generate_pseudo_anonimization(name=args.name, surname=args.surname, birth_date=args.birth_date)
+    pseudo_name=generate_pseudo_anonymization(name=args.name, surname=args.surname, birth_date=args.birth_date)
 
 
     # reallocate files
