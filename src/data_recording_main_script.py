@@ -36,7 +36,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Data recording with Azure Kinect and external Microphone.')
     parser.add_argument('--name', action='store', type=str, required=True)
     parser.add_argument('--surname', action='store', type=str, required=True)
-    parser.add_argument('--birth_date', action='store', type=str, required=True)
     parser.add_argument('--session_num', action='store', type=str, required=True)
     parser.add_argument('--date', action='store', type=str, required=True)
     parser.add_argument('--output_path', action='store', type=str, required=True)
@@ -90,7 +89,7 @@ if __name__ == '__main__':
         os.makedirs(os.path.join(args.output_path,session_full_name), exist_ok=True)
 
     # generate pseudoanonimized name
-    pseudo_name=generate_pseudo_anonymization(name=args.name, surname=args.surname, birth_date=args.birth_date)
+    pseudo_name=generate_pseudo_anonymization(name=args.name, surname=args.surname, date_of_recording=args.date)
 
 
     # reallocate files
