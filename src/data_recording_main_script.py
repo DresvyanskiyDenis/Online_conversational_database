@@ -11,7 +11,8 @@ import subprocess
 import src.data_recording_config as rec_config
 import shutil
 
-from src.anonymization import generate_pseudo_anonymization
+from src.anonymization import generate_pseudo_anonymization, generate_pseudoanonimization_time_room
+
 
 def get_device_id_by_name(name:str)->int:
     # automatic device id recognition using specified name
@@ -34,8 +35,7 @@ if __name__ == '__main__':
     import argparse
     # parsing
     parser = argparse.ArgumentParser(description='Data recording with Azure Kinect and external Microphone.')
-    parser.add_argument('--name', action='store', type=str, required=True)
-    parser.add_argument('--surname', action='store', type=str, required=True)
+    parser.add_argument('--room_name', action='store', type=str, required=True)
     parser.add_argument('--session_num', action='store', type=str, required=True)
     parser.add_argument('--date', action='store', type=str, required=True)
     parser.add_argument('--output_path', action='store', type=str, required=True)
@@ -89,7 +89,7 @@ if __name__ == '__main__':
         os.makedirs(os.path.join(args.output_path,session_full_name), exist_ok=True)
 
     # generate pseudoanonimized name
-    pseudo_name=generate_pseudo_anonymization(name=args.name, surname=args.surname, date_of_recording=args.date)
+    pseudo_name=generate_pseudoanonimization_time_room(room_name=args.room_name)
 
 
     # reallocate files
