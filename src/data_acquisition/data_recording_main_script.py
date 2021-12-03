@@ -8,10 +8,10 @@ if module_path not in sys.path:
     sys.path.append(module_path)
 
 import subprocess
-import src.data_recording_config as rec_config
+import src.data_acquisition.data_recording_config as rec_config
 import shutil
 
-from src.anonymization import generate_pseudo_anonymization, generate_pseudoanonimization_time_room
+from src.data_acquisition.anonymization import generate_pseudoanonimization_time_room
 
 
 def get_device_id_by_name(name:str)->int:
