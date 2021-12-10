@@ -1,12 +1,12 @@
 from collections import defaultdict
 from typing import Dict
-
 from pyannote.audio import Pipeline
 from pyannote.audio.pipelines import VoiceActivityDetection
-from scipy.io import wavfile
 import numpy as np
 import pandas as pd
+import torch
 import os
+import gc
 
 def get_speech_regions(path_to_audiofile:str, voice_activity_detector:Pipeline)->Dict[int,np.ndarray]:
     # get pyannote.core.Annotation with speech regions of different speakers
@@ -19,9 +19,10 @@ def get_speech_regions(path_to_audiofile:str, voice_activity_detector:Pipeline)-
         for label in labels:
             speaker_to_segments[label]=np.append(speaker_to_segments[label],np.array([[segment.start, segment.end]]), axis=0)
 
+    del speech_regions
     return speaker_to_segments
 
-def initialize_voice_activity_detector(device:str='cpu', onset:float=0.5, offset:float=0.5, min_duration_on:float=0.0, min_duration_off:float=0.0):
+def initialize_voice_activity_detector(device:str='cuda', onset:float=0.5, offset:float=0.5, min_duration_on:float=0.0, min_duration_off:float=0.0):
     # initialize the VAD using predifened model and device (CPU/GPU), on which it should work
     vad = VoiceActivityDetection(segmentation="pyannote/segmentation", device=device)
     HYPER_PARAMETERS = {
@@ -54,20 +55,33 @@ def save_speech_regions(speech_regions:Dict[int, np.ndarray], path:str) -> None:
         file_to_save=file_to_save.append(speaker_regions, ignore_index=True)
     # save file
     file_to_save.to_csv(path+'.csv', index=False)
+    print('Speech regions saved to the file %s...'%(path+'.csv'))
+    # clean RAM
+    del file_to_save
+    gc.collect()
 
 def generate_speech_regions_for_all_files_in_subdirs(path_to_dir:str, name_of_audio_file='audio_kinect.wav', output_path:str=None):
 
-    vad=initialize_voice_activity_detector()
+    if not output_path is None:
+        os.makedirs(output_path, exist_ok=True)
 
     for root, dirs, files in os.walk(os.path.abspath(path_to_dir)):
         for file in files:
-            if file=='name_of_audio_file':
+            if file==name_of_audio_file:
+                vad = initialize_voice_activity_detector()
+                print("preprocessing the %s file..."%str(os.path.join(root,name_of_audio_file)))
                 speech_regions=get_speech_regions(path_to_audiofile=os.path.join(root,name_of_audio_file), voice_activity_detector=vad)
                 if not output_path is None:
-                    final_output_path=os.path.join(output_path, root.split('\\|/')[-1],'speech_regions')
+                    final_output_path=os.path.join(output_path, root.split('/')[-1],'speech_regions')
+                    if not os.path.exists(os.path.join(output_path, root.split('/')[-1])):
+                        os.makedirs(os.path.join(output_path, root.split('/')[-1]))
                     save_speech_regions(speech_regions, path=final_output_path)
                 else:
                     save_speech_regions(speech_regions, path=os.path.join(root, 'speech_regions'))
+                # clean RAM
+                del vad
+                torch.cuda.empty_cache()
+                gc.collect()
 
 
 if __name__ == '__main__':
@@ -80,6 +94,6 @@ if __name__ == '__main__':
     #print(speech_regions)
     #save_speech_regions(speech_regions, 'tmp_dataframe')
 
-    generate_speech_regions_for_all_files_in_subdirs('D:\DyCoVa')
+    generate_speech_regions_for_all_files_in_subdirs('/media/external_hdd_1/DyCoVa/', output_path='/work/home/dsu/results/')
 
 
