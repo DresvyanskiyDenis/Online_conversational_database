@@ -8,6 +8,9 @@ import torch
 import os
 import gc
 
+from scipy.io import wavfile
+
+
 def get_speech_regions(path_to_audiofile:str, voice_activity_detector:Pipeline)->Dict[int,np.ndarray]:
     # get pyannote.core.Annotation with speech regions of different speakers
     speech_regions=voice_activity_detector(path_to_audiofile)
@@ -60,6 +63,38 @@ def save_speech_regions(speech_regions:Dict[int, np.ndarray], path:str) -> None:
     del file_to_save
     gc.collect()
 
+def n_to_mono_channel_audio_in_one(path_to_audio:str, output_path:str)->None:
+    # read audio file in wave format
+    sample_rate, audio=wavfile.read(path_to_audio)
+    # convert audio to the 1 channel
+    audio=audio.astype(float)
+    audio=audio.mean(axis=1)
+    audio = audio.astype('int32')
+    # save converted audio file
+    wavfile.write(output_path, sample_rate, audio)
+
+
+def convert_wav_to_mono_channel_for_all_files_in_subdirs(path_to_dir:str, name_of_audio_file='audio_kinect.wav',
+                                                         output_path:str=None)->None:
+    # create output dir if it does not exist
+    if not output_path is None:
+        os.makedirs(output_path, exist_ok=True)
+
+    for root, dirs, files in os.walk(os.path.abspath(path_to_dir)):
+        for file in files:
+            if file==name_of_audio_file:
+                print("preprocessing the %s file..." % str(os.path.join(root, name_of_audio_file)))
+                if not output_path is None:
+                    final_output_path = os.path.join(output_path, root.split('/')[-1], name_of_audio_file.split('.')[0]+'_compressed.wav')
+                    n_to_mono_channel_audio_in_one(path_to_audio=os.path.join(root, name_of_audio_file), output_path=final_output_path)
+                else:
+                    n_to_mono_channel_audio_in_one(path_to_audio=os.path.join(root, name_of_audio_file),
+                                                   output_path=os.path.join(root, name_of_audio_file.split('.')[0]+'_compressed.wav'))
+                # clear RAM
+                gc.collect()
+
+
+
 def generate_speech_regions_for_all_files_in_subdirs(path_to_dir:str, name_of_audio_file='audio_kinect.wav', output_path:str=None):
 
     if not output_path is None:
@@ -84,6 +119,9 @@ def generate_speech_regions_for_all_files_in_subdirs(path_to_dir:str, name_of_au
                 gc.collect()
 
 
+
+
+
 if __name__ == '__main__':
 
     #vad = initialize_voice_activity_detector()
@@ -94,6 +132,6 @@ if __name__ == '__main__':
     #print(speech_regions)
     #save_speech_regions(speech_regions, 'tmp_dataframe')
 
-    generate_speech_regions_for_all_files_in_subdirs('/media/external_hdd_1/DyCoVa/', output_path='/work/home/dsu/results/')
+    convert_wav_to_mono_channel_for_all_files_in_subdirs('/media/external_hdd_1/DyCoVa/', output_path=None)
 
 
