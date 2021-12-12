@@ -1,5 +1,6 @@
+import glob
 from collections import defaultdict
-from typing import Dict
+from typing import Dict, Optional
 from pyannote.audio import Pipeline
 from pyannote.audio.pipelines import VoiceActivityDetection
 import numpy as np
@@ -74,6 +75,49 @@ def n_to_mono_channel_audio_in_one(path_to_audio:str, output_path:str)->None:
     wavfile.write(output_path, sample_rate, audio)
 
 
+def apply_speech_regions_to_audio(audio_array:np.ndarray, speech_regions:pd.DataFrame, sample_rate:int=44100,
+                                  speaker_ID:int=0) -> np.ndarray:
+    # tak only speaker with specified Speaker_ID
+    speech_regions = speech_regions[speech_regions['Speaker_ID']==speaker_ID]
+    # go through speech_regions dataframe and silence all parts, which are not indicated
+    # columns of the speech_regions: speaker_ID, segment_start, segment_end
+    end_of_last_segment_idx=0
+    for idx in range(0, speech_regions.shape[0]):
+        # convert start of the segment from seconds to index of wave data
+        start_segment_idx=int(speech_regions.iloc[idx].segment_start * sample_rate)
+        # silent sounds from end of last segment to start of current segment
+        audio_array[end_of_last_segment_idx:start_segment_idx]=0
+        # save end of current segment for future calculations
+        end_of_last_segment_idx = int(speech_regions.iloc[idx].segment_end * sample_rate)
+    # silence the segment from end of the very last segment to end of the audio
+    audio_array[end_of_last_segment_idx:]=0
+
+    return audio_array
+
+def apply_speech_regions_to_audio_in_subdirs(path_to_dir:str, path_to_dir_speech_regions:str,
+                                             name_of_audio_file='audio_microphone.wav')->None:
+    # find names of dirs with speech regions - these are names of participants' codes
+    participants_ids=os.listdir(path_to_dir_speech_regions)
+    for participants_id in participants_ids:
+        # find directory with the audioname specified in name_of_audio_file and participants_id
+        path_to_audio_for_processing=glob.glob(os.path.join(path_to_dir, "**", participants_id, name_of_audio_file))
+        print("preprocessing the %s file..." % path_to_audio_for_processing)
+        # check if only one path was found
+        if len(path_to_audio_for_processing)==1:
+            path_to_audio_for_processing=path_to_audio_for_processing[0]
+        else:
+            raise Exception('The number of found paths is more than one.')
+        # read file with speech regions
+        speech_regions=pd.read_csv(os.path.join(path_to_dir_speech_regions, participants_id, "speech_regions.csv"))
+        # read audio to be processed
+        sample_rate, audio = wavfile.read(path_to_audio_for_processing)
+        audio= apply_speech_regions_to_audio(audio, speech_regions, sample_rate, speaker_ID=0)
+        # save processed audio
+        path_for_saving=path_to_audio_for_processing[:path_to_audio_for_processing.rfind("/")]
+        path_for_saving=os.path.join(path_for_saving, name_of_audio_file.split(".")[0]+'_with_speaker_0.wav')
+        wavfile.write(path_for_saving, sample_rate, audio)
+
+
 def convert_wav_to_mono_channel_for_all_files_in_subdirs(path_to_dir:str, name_of_audio_file='audio_kinect.wav',
                                                          output_path:str=None)->None:
     # create output dir if it does not exist
@@ -120,8 +164,6 @@ def generate_speech_regions_for_all_files_in_subdirs(path_to_dir:str, name_of_au
 
 
 
-
-
 if __name__ == '__main__':
 
     #vad = initialize_voice_activity_detector()
@@ -132,6 +174,10 @@ if __name__ == '__main__':
     #print(speech_regions)
     #save_speech_regions(speech_regions, 'tmp_dataframe')
 
-    convert_wav_to_mono_channel_for_all_files_in_subdirs('/media/external_hdd_1/DyCoVa/', output_path=None)
+    ########################################
+    #convert_wav_to_mono_channel_for_all_files_in_subdirs('/media/external_hdd_1/DyCoVa/', output_path=None)
+    ########################################
 
+    apply_speech_regions_to_audio_in_subdirs(path_to_dir="/media/external_hdd_1/DyCoVa/", path_to_dir_speech_regions="/work/home/dsu/results/",
+                                             name_of_audio_file='audio_microphone.wav')
 
