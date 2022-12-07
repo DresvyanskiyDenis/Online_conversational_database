@@ -114,7 +114,7 @@ def apply_speech_regions_to_audio_in_subdirs(path_to_dir:str, path_to_dir_speech
         audio= apply_speech_regions_to_audio(audio, speech_regions, sample_rate, speaker_ID=0)
         # save processed audio
         path_for_saving=path_to_audio_for_processing[:path_to_audio_for_processing.rfind("/")]
-        path_for_saving=os.path.join(path_for_saving, name_of_audio_file.split(".")[0]+'_with_speaker_0.wav')
+        path_for_saving=os.path.join(path_for_saving, name_of_audio_file.split(".")[0]+'_speaker_0.wav')
         wavfile.write(path_for_saving, sample_rate, audio)
 
 
@@ -179,5 +179,5 @@ if __name__ == '__main__':
     ########################################
 
     apply_speech_regions_to_audio_in_subdirs(path_to_dir="/media/external_hdd_1/DyCoVa/", path_to_dir_speech_regions="/work/home/dsu/results/",
-                                             name_of_audio_file='audio_microphone.wav')
+                                             name_of_audio_file='audio_kinect_compressed.wav')
 
