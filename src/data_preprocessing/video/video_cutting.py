@@ -1,51 +1,17 @@
-import os
+from typing import Union, Tuple, Optional
 
-import pandas as pd
-import numpy as np
 import cv2
+import numpy as np
+import pandas as pd
+from moviepy.editor import VideoFileClip
 
+from src.data_preprocessing.video.video_preprocessing_tools import get_sequence_of_video, compose_three_videos
 
+if __name__ == '__main__':
+    video_path = r"C:\Users\Dresvyanskiy\Desktop\Dark Ambient from Night City.mp4"
+    generated_video_path = r"C:\Users\Dresvyanskiy\Desktop\Dark Ambient from Night City_cut.mp4"
+    output_path = r"C:\Users\Dresvyanskiy\Desktop\composed_1.mp4"
+    get_sequence_of_video(video_path, (0, 10), generated_video_path, (1920, 1080))
 
-def cut_video_on_sequences(video_path:str, sequence_length:int, output_path:str):
-    """
+    compose_three_videos(generated_video_path, generated_video_path, generated_video_path, output_path)
 
-    :param video_path:
-    :param sequence_length:
-    :param output_path:
-    :return:
-    """
-    cap = cv2.VideoCapture(video_path)
-
-    if (cap.isOpened() == False):
-        raise Exception("Error opening video stream or file: " + video_path)
-
-    # create the output path if it does not exist
-    if not os.path.exists(output_path):
-        os.makedirs(output_path, exist_ok=True)
-    path_to_extracted_videos = os.path.join(output_path, video_path.split(os.path.sep)[-1].split('.')[0])
-    if not os.pat.exists(path_to_extracted_videos):
-        os.makedirs(path_to_extracted_videos, exist_ok=True)
-    path_to_metadata = os.path.join(output_path, 'metadata.csv')
-
-    # prepare metadata file
-    metadata = pd.DataFrame(columns=['video_filename', 'id', 'start_frame', 'end_frame', 'start_sec', 'end_sec'])
-
-
-    # using scikit-video lib http://www.scikit-video.org/stable/io.html
-
-
-
-
-
-
-
-
-
-
-
-def main():
-    pass
-
-
-if __name__== "__main__":
-    main()
