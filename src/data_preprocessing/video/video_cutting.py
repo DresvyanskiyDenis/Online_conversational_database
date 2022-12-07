@@ -13,5 +13,5 @@ if __name__ == '__main__':
     output_path = r"C:\Users\Dresvyanskiy\Desktop\composed_1.mp4"
     get_sequence_of_video(video_path, (0, 10), generated_video_path, (1920, 1080))
 
-    compose_three_videos(generated_video_path, generated_video_path, generated_video_path, output_path)
+    compose_three_videos(generated_video_path, generated_video_path, generated_video_path, output_path, final_resolution=(1920, 1080))
 

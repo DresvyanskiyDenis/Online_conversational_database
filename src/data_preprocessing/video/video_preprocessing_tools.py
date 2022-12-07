@@ -65,7 +65,7 @@ def get_sequence_of_video(video:Union[str, VideoFileClip], limits:Tuple[float, f
 
 
 def compose_three_videos(video1:Union[str, VideoFileClip], video2:Union[str, VideoFileClip], video3:Union[str, VideoFileClip],
-                         output_path:str) ->None:
+                         output_path:str, final_resolution:Tuple[int, int]) ->None:
     """ Compose three videos in a single video.
 
     :param video1: Union[str, cv2.VideoCapture]
@@ -76,17 +76,42 @@ def compose_three_videos(video1:Union[str, VideoFileClip], video2:Union[str, Vid
         Path to the third video or a cv2.VideoCapture object.
     :param output_path: str
         Path to the output video.
+    :param final_resolution: Tuple[int, int]
+        Tuple with the new width and height of the video
     :return:
     """
-    clip1 = VideoFileClip(video1).resize((940, 520)).margin(10, color=(0, 0, 0))
-    clip2 = VideoFileClip(video2).resize((940, 520)).margin(10, color=(0, 0, 0))
-    clip3 = VideoFileClip(video3).resize((940, 520)).margin(10, color=(0, 0, 0))
-    fps = clip1.fps
-    final_clip = CompositeVideoClip([clip1.set_position((0,0)),
-                           clip2.set_position((960,0)),
-                           clip3.set_position((480,540))], size=(1920, 1080))
+    clip1 = VideoFileClip(video1)
+    clip1_size = (clip1.w, clip1.h) # (width, height)
+    clip1_fps = clip1.fps
+    clip2 = VideoFileClip(video2)
+    clip2_size = (clip2.w, clip2.h) # (width, height)
+    clip2_fps = clip2.fps
+    clip3 = VideoFileClip(video3)
+    clip3_size = (clip3.w, clip3.h) # (width, height)
+    clip3_fps = clip3.fps
 
-    final_clip.write_videofile(output_path, fps=fps)
+    if clip1_fps != clip2_fps or clip1_fps != clip3_fps:
+        raise ValueError("The fps of the videos are not equal.")
+
+    if clip1_size != clip2_size or clip1_size != clip3_size:
+        raise ValueError("The height and/or width of the videos are not equal.")
+
+    # resizing the videos
+    new_size = (final_resolution[0]//2-20, final_resolution[1]//2-20) # (width, height)
+    clip1 = clip1.resize(new_size).margin(10, color=(0, 0, 0))
+    clip2 = clip2.resize(new_size).margin(10, color=(0, 0, 0))
+    clip3 = clip3.resize(new_size).margin(10, color=(0, 0, 0))
+
+    # calculate positions
+    pos1 = (0, 0)
+    pos2 = (final_resolution[0]//2, 0)
+    pos3 = (final_resolution[0]//4, final_resolution[1]//2)
+    # make the composition
+    final_clip = CompositeVideoClip([clip1.set_position(pos1),
+                           clip2.set_position(pos2),
+                           clip3.set_position(pos3)], size=final_resolution)
+
+    final_clip.write_videofile(output_path, fps=clip1_fps)
 
 
 
