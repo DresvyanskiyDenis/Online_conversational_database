@@ -3,7 +3,7 @@ import os
 import gc
 from typing import Union, Tuple, Optional
 
-from moviepy.editor import VideoFileClip, clips_array, concatenate_videoclips, CompositeVideoClip
+from moviepy.editor import VideoFileClip, CompositeVideoClip
 
 
 def extract_and_reencode_video_from_mkv(path_to_file:str, output_path:str)->None:
@@ -38,20 +38,23 @@ def extract_and_reencode_all_videos_with_name(path_to_dir:str, name_of_videofile
                 else:
                     extract_and_reencode_video_from_mkv(path_to_file=os.path.join(root, file), output_path=root)
 
-def get_sequence_of_video(video:Union[str, VideoFileClip], limits:Tuple[float, float], output_path:str,
-                          resize:Optional[Tuple[int, int]]=None, with_audio:Optional[bool]=True)->None:
+def get_sequence_of_video(video:Union[str, VideoFileClip], limits:Tuple[float, float],
+                          resize:Optional[Tuple[int, int]]=None, with_audio:Optional[bool]=True,
+                          save_video:Optional[bool]=False, output_path:Optional[str]=None)->VideoFileClip:
     """ Get a sequence of a video and save it in a new video file.
 
     :param video: Union[str, cv2.VideoCapture]
         Path to the video or a cv2.VideoCapture object.
     :param limits: Tuple[float, float]
-        Tuple with the start and end time of the sequence.
+        Tuple with the start and end time of the sequence. (in seconds)
     :param output_path: str
         Path to the output video.
     :param resize: Optional[Tuple[int, int]]
         Tuple with the new width and height of the video, if specified.
     :param with_audio: Optional[bool]
         If True, the audio of the original video is included in the output video.
+    :param save_video: Optional[bool]
+        If True, the output video is saved using the output_path.
     :return:
     """
     clip = VideoFileClip(video).subclip(limits[0], limits[1])
@@ -60,12 +63,16 @@ def get_sequence_of_video(video:Union[str, VideoFileClip], limits:Tuple[float, f
         clip = clip.resize(resize)
     if with_audio is False:
         clip.audio=None
-    clip.write_videofile(output_path, fps=fps)
+    if save_video is True:
+        clip.write_videofile(output_path, fps=fps, threads=4)
+    else:
+        return clip
 
 
 
 def compose_three_videos(video1:Union[str, VideoFileClip], video2:Union[str, VideoFileClip], video3:Union[str, VideoFileClip],
-                         output_path:str, final_resolution:Tuple[int, int]) ->None:
+                         final_resolution:Tuple[int, int],
+                         save_video:Optional[bool]=False, output_path:Optional[str]=None) ->CompositeVideoClip:
     """ Compose three videos in a single video.
 
     :param video1: Union[str, cv2.VideoCapture]
@@ -74,19 +81,30 @@ def compose_three_videos(video1:Union[str, VideoFileClip], video2:Union[str, Vid
         Path to the second video or a cv2.VideoCapture object.
     :param video3: Union[str, cv2.VideoCapture]
         Path to the third video or a cv2.VideoCapture object.
+    :param save_video: Optional[bool]
+        If True, the output video is saved using the output_path.
     :param output_path: str
         Path to the output video.
     :param final_resolution: Tuple[int, int]
         Tuple with the new width and height of the video
     :return:
     """
-    clip1 = VideoFileClip(video1)
+    if isinstance(video1, str):
+        clip1 = VideoFileClip(video1)
+    else:
+        clip1 = video1
     clip1_size = (clip1.w, clip1.h) # (width, height)
     clip1_fps = clip1.fps
-    clip2 = VideoFileClip(video2)
+    if isinstance(video2, str):
+        clip2 = VideoFileClip(video2)
+    else:
+        clip2 = video2
     clip2_size = (clip2.w, clip2.h) # (width, height)
     clip2_fps = clip2.fps
-    clip3 = VideoFileClip(video3)
+    if isinstance(video3, str):
+        clip3 = VideoFileClip(video3)
+    else:
+        clip3 = video3
     clip3_size = (clip3.w, clip3.h) # (width, height)
     clip3_fps = clip3.fps
 
@@ -111,8 +129,10 @@ def compose_three_videos(video1:Union[str, VideoFileClip], video2:Union[str, Vid
                            clip2.set_position(pos2),
                            clip3.set_position(pos3)], size=final_resolution)
 
-    final_clip.write_videofile(output_path, fps=clip1_fps)
-
+    if save_video is True:
+        final_clip.write_videofile(output_path, fps=clip1_fps, threads=8)
+    else:
+        return final_clip
 
 
 
