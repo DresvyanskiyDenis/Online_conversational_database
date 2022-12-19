@@ -55,7 +55,7 @@ def get_sequence_of_video(video:Union[str, VideoFileClip], limits:Tuple[float, f
         If True, the audio of the original video is included in the output video.
     :param save_video: Optional[bool]
         If True, the output video is saved using the output_path.
-    :return:
+    :return: VideoFileClip
     """
     clip = VideoFileClip(video).subclip(limits[0], limits[1])
     fps = clip.fps
