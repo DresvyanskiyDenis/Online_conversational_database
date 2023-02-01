@@ -4,6 +4,9 @@ import gc
 from typing import Union, Tuple, Optional
 
 from moviepy.editor import VideoFileClip, CompositeVideoClip
+from moviepy.video.VideoClip import TextClip
+from moviepy.config import change_settings
+change_settings({"IMAGEMAGICK_BINARY": r"C:\\Program Files\\ImageMagick-7.1.0-Q16-HDRI\\magick.exe"})
 
 
 def extract_and_reencode_video_from_mkv(path_to_file:str, output_path:str)->None:
@@ -57,7 +60,9 @@ def get_sequence_of_video(video:Union[str, VideoFileClip], limits:Tuple[float, f
         If True, the output video is saved using the output_path.
     :return: VideoFileClip
     """
-    clip = VideoFileClip(video).subclip(limits[0], limits[1])
+    if isinstance(video, str):
+        video = VideoFileClip(video)
+    clip = video.subclip(limits[0], limits[1])
     fps = clip.fps
     if resize is not None:
         clip = clip.resize(resize)
@@ -75,12 +80,12 @@ def compose_three_videos(video1:Union[str, VideoFileClip], video2:Union[str, Vid
                          save_video:Optional[bool]=False, output_path:Optional[str]=None) ->CompositeVideoClip:
     """ Compose three videos in a single video.
 
-    :param video1: Union[str, cv2.VideoCapture]
-        Path to the first video or a cv2.VideoCapture object.
-    :param video2: Union[str, cv2.VideoCapture]
-        Path to the second video or a cv2.VideoCapture object.
-    :param video3: Union[str, cv2.VideoCapture]
-        Path to the third video or a cv2.VideoCapture object.
+    :param video1: Union[str, VideoFileClip]
+        Path to the first video or a VideoFileClip object
+    :param video2: Union[str, VideoFileClip]
+        Path to the second video or a VideoFileClip object
+    :param video3: Union[str, VideoFileClip]
+        Path to the third video or a VideoFileClip object
     :param save_video: Optional[bool]
         If True, the output video is saved using the output_path.
     :param output_path: str
@@ -119,6 +124,17 @@ def compose_three_videos(video1:Union[str, VideoFileClip], video2:Union[str, Vid
     clip1 = clip1.resize(new_size).margin(10, color=(0, 0, 0))
     clip2 = clip2.resize(new_size).margin(10, color=(0, 0, 0))
     clip3 = clip3.resize(new_size).margin(10, color=(0, 0, 0))
+    # set texts for the videos
+    txt_1 = TextClip("Participant 1", fontsize=40, color='red')
+    txt_2 = TextClip("Participant 2", fontsize=40, color='red')
+    txt_3 = TextClip("Participant 3", fontsize=40, color='red')
+    txt_1 = txt_1.set_pos('bottom').set_duration(clip1.duration)
+    txt_2 = txt_2.set_pos('bottom').set_duration(clip2.duration)
+    txt_3 = txt_3.set_pos('bottom').set_duration(clip3.duration)
+    # add texts to the videos
+    clip1 = CompositeVideoClip([clip1, txt_1])
+    clip2 = CompositeVideoClip([clip2, txt_2])
+    clip3 = CompositeVideoClip([clip3, txt_3])
 
     # calculate positions
     pos1 = (0, 0)
